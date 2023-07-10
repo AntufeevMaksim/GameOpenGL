@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameOpenGL", "GameOpenGL\GameOpenGL.csproj", "{8D9A09E1-0B2B-4E05-BF8D-ABC1FEA5FE2D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shaders", "shaders", "{6EFDDB80-B8BA-4A89-BEFD-0B6C8546AFD9}"
+	ProjectSection(SolutionItems) = preProject
+		shader.frag = shader.frag
+		lamp_shader.frag = lamp_shader.frag
+		shader.vert = shader.vert
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D9A09E1-0B2B-4E05-BF8D-ABC1FEA5FE2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D9A09E1-0B2B-4E05-BF8D-ABC1FEA5FE2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D9A09E1-0B2B-4E05-BF8D-ABC1FEA5FE2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D9A09E1-0B2B-4E05-BF8D-ABC1FEA5FE2D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85331BBF-EA2F-46EB-9E12-ACC2A271D9B4}
+	EndGlobalSection
+EndGlobal
