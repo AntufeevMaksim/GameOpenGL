@@ -192,11 +192,6 @@ public class Game : GameWindow
         CursorState = CursorState.Grabbed;
         _timer.Start();
 
-        Scene scene = new Scene();
-        // Load an existing 3D document
-        scene.Open("D:\\Models\\source\\Westen_pacific_713_fixed_UVs.fbx");
-
-        var p = scene.Poses;
 
         GL.Enable(EnableCap.DepthTest);
     }
