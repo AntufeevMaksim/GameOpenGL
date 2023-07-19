@@ -8,17 +8,17 @@ using OpenTK.Mathematics;
 using ObjLoader;
 
 using Input;
+using Model;
 
 using System.Diagnostics;
 using ObjLoader.Loader.Loaders;
-using Aspose.ThreeD;
 
 public class Game : GameWindow
 {
-    int _vertexBufferObject;
-    int _vertexArrayObject;
+    int _VBO;
+    int _VAO;
     int _lightVAO;
-    int _elementBufferObject;
+    int _EBO;
 
     Shader _shader;
     Shader _lampShader;
@@ -40,7 +40,7 @@ public class Game : GameWindow
     float _deltaTime = 0.0f;
 
     Camera _camera;
-
+    Model.Model model1;
     Stopwatch _timer = new Stopwatch();
 
     List<Vector3> _cubePositions = new List<Vector3>{
@@ -58,11 +58,18 @@ public class Game : GameWindow
     };
 
     List<Vector3> _pointLightPositions = new List<Vector3>{
+
     new Vector3( 0.7f,  0.2f,  2.0f),
     new Vector3( 2.3f, -3.3f, -4.0f),
     new Vector3(-4.0f,  2.0f, -12.0f),
     new Vector3( 0.0f,  0.0f, -3.0f)
   };
+
+
+    uint[] indices = {
+    0, 1, 3, // First Triangle
+    1, 2, 3  // Second Triangle
+    };
 
     public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title }) { }
 
@@ -138,19 +145,14 @@ public class Game : GameWindow
     };
 
 
-        uint[] indices = {
-    0, 1, 3, // First Triangle
-    1, 2, 3  // Second Triangle
-    };
-
         //VBO1
-        _vertexBufferObject = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+        _VBO = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _VBO);
         GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
 
         //VAO1
-        _vertexArrayObject = GL.GenVertexArray();
-        GL.BindVertexArray(_vertexArrayObject);
+        _VAO = GL.GenVertexArray();
+        GL.BindVertexArray(_VAO);
 
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
         GL.EnableVertexAttribArray(0);
@@ -175,24 +177,31 @@ public class Game : GameWindow
 
 
         //EBO
-        _elementBufferObject = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
+        _EBO = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
         GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
+
+        GL.BindVertexArray(0);
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
 
         _shader = new Shader("C:\\Users\\antuf\\source\\repos\\c#\\GameOpenGL\\shader.vert", "C:\\Users\\antuf\\source\\repos\\c#\\GameOpenGL\\shader.frag");
 
         _lampShader = new Shader("C:\\Users\\antuf\\source\\repos\\c#\\GameOpenGL\\shader.vert", "C:\\Users\\antuf\\source\\repos\\c#\\GameOpenGL\\lamp_shader.frag");
 
-        _textureDiffuse = new Texture("C:\\Users\\antuf\\source\\resources\\container2.png");
-        _textureSpecular = new Texture("C:\\Users\\antuf\\source\\resources\\container2_specular.png");
-        _textureEmission = new Texture("C:\\Users\\antuf\\source\\resources\\matrix.jpg");
+        //_textureDiffuse = new Texture("C:\\Users\\antuf\\source\\resources\\container2.png",);
+        //_textureSpecular = new Texture("C:\\Users\\antuf\\source\\resources\\container2_specular.png");
+        //_textureEmission = new Texture("C:\\Users\\antuf\\source\\resources\\matrix.jpg");
 
         _input = new InputCallback(KeyboardState, MouseState);
-        _camera = new Camera(new Vector3(-2.0f, 1.0f, 0.0f), new Vector3(2.0f, 1.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f));
+        _camera = new Camera(new Vector3(0.0f, 0.0f, -3.0f), new Vector3(2.0f, 1.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f));
         CursorState = CursorState.Grabbed;
         _timer.Start();
 
-
+        //model1 = new Model.Model("D:\\Models\\viper\\", "Super car Viper.fbx");
+        model1 = new Model.Model("D:\\Models\\source\\", "Survival_BackPack_2.fbx");
         GL.Enable(EnableCap.DepthTest);
     }
 
@@ -220,20 +229,22 @@ public class Game : GameWindow
 
         //cube
 
+        //_textureDiffuse.Use(TextureUnit.Texture0);
+        //_shader.SetInt("material.diffuse", 0);
+        //_textureSpecular.Use(TextureUnit.Texture1);
+        //_shader.SetInt("material.specular", 1);
+        //_textureEmission.Use(TextureUnit.Texture2);
+        //_shader.SetInt("material.emission", 2);
+
         _shader.Use();
-        _textureDiffuse.Use(TextureUnit.Texture0);
-        _shader.SetInt("material.diffuse", 0);
-        _textureSpecular.Use(TextureUnit.Texture1);
-        _shader.SetInt("material.specular", 1);
-        _textureEmission.Use(TextureUnit.Texture2);
-        _shader.SetInt("material.emission", 2);
-
-
         _shader.SetMat4("projection", projection);
         _shader.SetMat4("view", view);
 
         _shader.SetVec3("viewPos", camera_pos);
 
+        Matrix4 model = Matrix4.Identity;
+        model *= Matrix4.CreateTranslation(_cubePositions[0]);
+        _shader.SetMat4("model", model);
         _shader.SetFloat("material.shininess", 100.0f);
 
         float x_pos = (float)Math.Sin(MathHelper.DegreesToRadians(15 * _timer.Elapsed.TotalSeconds));
@@ -244,7 +255,7 @@ public class Game : GameWindow
         {
 
             _shader.SetVec3(String.Format("pointLights[{0}].ambient", i), new Vector3(0.1f, 0.1f, 0.1f));
-            _shader.SetVec3(String.Format("pointLights[{0}].diffuse", i), new Vector3(0.9f, 1.0f, 1.0f)); // darken the light a bit to fit the scene
+            _shader.SetVec3(String.Format("pointLights[{0}].diffuse", i), new Vector3(0.9f, 1.0f, 1.0f));
             _shader.SetVec3(String.Format("pointLights[{0}].specular", i), new Vector3(0.9f, 1.0f, 1.0f));
             _shader.SetFloat(String.Format("pointLights[{0}].constant", i), 1.0f);
             _shader.SetFloat(String.Format("pointLights[{0}].linear", i), 0.09f);
@@ -262,11 +273,13 @@ public class Game : GameWindow
         _shader.SetVec3("spotlight.diffuse", new Vector3(1.0f, 1.0f, 1.0f)); // darken the light a bit to fit the scene
         _shader.SetVec3("spotlight.specular", new Vector3(1.0f, 1.0f, 1.0f));
 
-        GL.BindVertexArray(_vertexArrayObject);
+        GL.BindVertexArray(_VAO);
 
+
+        model1.Draw(_shader, _EBO, _VAO, _VBO);
         for (int i = 0; i < _cubePositions.Count; i++)
         {
-            Matrix4 model = Matrix4.Identity;
+//            Matrix4 model = Matrix4.Identity;
             model *= Matrix4.CreateTranslation(_cubePositions[i]);
             // We then calculate the angle and rotate the model around an axis
             float angle = 20.0f * i;
@@ -275,7 +288,10 @@ public class Game : GameWindow
             _shader.SetMat4("model", model);
 
             // At last we draw all our cubes
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            GL.BindVertexArray(_VAO);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
+            //GL.DrawElements(BeginMode.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
         }
 
 
