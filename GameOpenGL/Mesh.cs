@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
 using System.Runtime.InteropServices;
 using OpenTK.Mathematics;
-
+using Assimp;
 
 namespace Model
 {
@@ -24,10 +24,6 @@ namespace Model
 
 
         public static readonly int Stride = Marshal.SizeOf(default(Vertex));
-        public float[] ToArray()
-        {
-            return new float[] { position.X, position.Y, position.Z, normal.X, normal.Y, normal.Z, TexCoords.X, TexCoords.Y };
-        }
 }
 
     public class Mesh
@@ -36,13 +32,15 @@ namespace Model
         public List<Vertex> _vertices;
         public List<uint> _indices = new List<uint> {    0, 1, 3,  1, 2, 3   };
         public List<Texture> _textures;
+        public Vector4 _color;
 
 
-        public Mesh(List<Vertex> vertices, List<uint> indices, List<Texture> textures)
+        public Mesh(List<Vertex> vertices, List<uint> indices, List<Texture> textures, Vector4 color)
         {
             _vertices = vertices;
             _indices = indices;
             _textures = textures;
+            _color = color;
 
             setupMesh();
         }
@@ -52,15 +50,26 @@ namespace Model
             uint diffuse_texture_nr = 0;
             uint specular_texture_nr = 0;
 
+            shader.SetInt("has_textures", /*_textures.Count*/0);
+
+            if (_textures.Any(t => t.Path.Contains("_3.jpg")))
+            {
+                shader.SetVec4("material.color", new Vector4(0.5f));
+            }
+            else
+            {
+                shader.SetVec4("material.color", /*_color*/ new Vector4(1.0f));
+            }
             for (int i = 0; i < _textures.Count; i++)
             {
                 _textures[i].Use(TextureUnit.Texture0 + i);
-
                 switch (_textures[i].Type)
                 {
                     case TextureType.Diffuse:
                         shader.SetInt(String.Format("material.texture_diffuse{0}", diffuse_texture_nr), i);
                         diffuse_texture_nr++;
+
+
                         break;
 
                     case TextureType.Specular:
@@ -74,10 +83,6 @@ namespace Model
             }
             GL.ActiveTexture(TextureUnit.Texture0);
 
-            //uint[] indices = {
-            //0, 1, 3, // First Triangle
-            //1, 2, 3  // Second Triangle
-            //};
 
             GL.BindVertexArray(VAO);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
@@ -95,58 +100,12 @@ namespace Model
 
         private void setupMesh()
         {
-
-            float[] vertices = {
-        // vertexes             // normals              //texture coords
-        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,     1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,     0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,     1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,     0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,     0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,     1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,     0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,     0.0f, 1.0f
-    };
+;
 
 
             //VBO1
             VBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            //            GL.BufferData(BufferTarget.ArrayBuffer, Marshal.SizeOf(_vertices[0]) * vertices.Length/*vertices.Length * sizeof(float)*/, _vertices.ToArray(), BufferUsageHint.StaticDraw);
-            //            GL.BufferData(BufferTarget.ArrayBuffer, (_vertices.Count * 8 * sizeof(float)), (from v in _vertices select v.ToArray()), BufferUsageHint.StaticDraw);
             GL.BufferData<Vertex>(BufferTarget.ArrayBuffer, (IntPtr)(_vertices.Count * Vertex.Stride), _vertices.ToArray(), BufferUsageHint.StaticDraw);
 
 

@@ -7,6 +7,8 @@ using OpenTK.Mathematics;
 
 using Assimp;
 using System.IO;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using ObjLoader.Loader.Data;
 
 namespace Model
 {
@@ -65,7 +67,6 @@ namespace Model
                 vector3.Y = mesh.Normals[i].Y;
                 vector3.Z = mesh.Normals[i].Z;
                 vertex.normal = vector3;
-                vertices.Add(vertex);
 
                 if (mesh.TextureCoordinateChannelCount != 0)    //if mesh has texture coordinates
                 {
@@ -79,28 +80,33 @@ namespace Model
                 {
                     vertex.TexCoords = new Vector2(0.0f);
                 }
+                vertices.Add(vertex);
             }
 
             indices = new List<uint>(mesh.GetUnsignedIndices());
 
             if (mesh.MaterialIndex >= 0)    //if mesh has material
             {
-                Material material = _model.Materials[mesh.MaterialIndex];
+                Assimp.Material material = _model.Materials[mesh.MaterialIndex];
 
                 textures.AddRange(LoadMaterialTextures(material));
-                //textures.AddRange(LoadMaterialTextures(material));
+
+                Vector4 color = new Vector4( material.ColorDiffuse.R, material.ColorDiffuse.G, material.ColorDiffuse.B, material.ColorDiffuse.A );
+                return new Mesh(vertices, indices, textures, color);
             }
 
-            return new Mesh(vertices, indices, textures);
+            return new Mesh(vertices, indices, textures, new Vector4(0));
+
 
         }
 
-        private List<Texture> LoadMaterialTextures(Material material)
+        private List<Texture> LoadMaterialTextures(Assimp.Material material)
         {
             List<Texture> textures = new List<Texture>();
-
+            int c = material.GetMaterialTextureCount(Assimp.TextureType.Diffuse);
             TextureSlot[] assimp_textures = material.GetAllMaterialTextures();
 
+            float[] border_color = {0.0f, 0.0f, 0.0f, 0.0f};
             bool skip_loading = false;
             foreach(TextureSlot texture_slot in assimp_textures)
             {
@@ -108,15 +114,16 @@ namespace Model
 
                 if (loaded_texture is null)
                 {
+                    border_color =  new float[] {material.ColorDiffuse.R, material.ColorDiffuse.G, material.ColorDiffuse.B, material.ColorDiffuse.A};
 
                     Texture texture = null;
                     switch (texture_slot.TextureType)
                     {
                         case Assimp.TextureType.Diffuse:
-                            texture = new Texture(_loadingPath + texture_slot.FilePath, TextureType.Diffuse);
+                            texture = new Texture(_loadingPath + texture_slot.FilePath, TextureType.Diffuse, texture_slot.WrapModeU, texture_slot.WrapModeV, border_color);
                             break;
                         case Assimp.TextureType.Specular:
-                            texture = new Texture(_loadingPath + texture_slot.FilePath, TextureType.Specular);
+                            texture = new Texture(_loadingPath + texture_slot.FilePath, TextureType.Specular, texture_slot.WrapModeU, texture_slot.WrapModeV, border_color);
                             break;
                     }
 
@@ -124,10 +131,11 @@ namespace Model
                     _textures_loaded.Add(texture);
                 }
                 else
-            {
+                {
                 textures.Add(loaded_texture);
+                }
             }
-        }
+
             return textures;
         }
     }

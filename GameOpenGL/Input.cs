@@ -4,7 +4,7 @@ using OpenTK.Mathematics;
 namespace Input
 {
 
-    public struct InputData
+    public class InputData
     {
 
 

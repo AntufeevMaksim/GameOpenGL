@@ -12,6 +12,7 @@ using Model;
 
 using System.Diagnostics;
 using ObjLoader.Loader.Loaders;
+using System.Reflection;
 
 public class Game : GameWindow
 {
@@ -200,8 +201,12 @@ public class Game : GameWindow
         CursorState = CursorState.Grabbed;
         _timer.Start();
 
-        //model1 = new Model.Model("D:\\Models\\viper\\", "Super car Viper.fbx");
-        model1 = new Model.Model("D:\\Models\\source\\", "Survival_BackPack_2.fbx");
+        //model1 = new Model.Model("D:\\Models\\survival-guitar-backpack\\source\\", "Survival_BackPack_2.fbx");
+        //model1 = new Model.Model("D:\\Models\\Nissan Skyline\\", "r32.obj");
+        //model1 = new Model.Model("D:\\Models\\Cube\\", "cube.fbx");
+        model1 = new Model.Model("D:\\Models\\BMW\\source\\", "E30_Final01.blend");
+        //model1 = new Model.Model("D:\\Models\\Viper - Copy\\source\\", "Super car Viper.fbx");
+    
         GL.Enable(EnableCap.DepthTest);
     }
 
@@ -214,6 +219,10 @@ public class Game : GameWindow
     {
         System.Threading.Thread.Sleep(20);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        GL.Enable(EnableCap.Blend);
+        GL.ClearColor(new Color4(0.0f, 0.0f, 0.0f, 0.0f));
+
 
         float current_frame = _timer.ElapsedMilliseconds;
         _deltaTime = current_frame - _lastFrame;
@@ -243,7 +252,9 @@ public class Game : GameWindow
         _shader.SetVec3("viewPos", camera_pos);
 
         Matrix4 model = Matrix4.Identity;
-        model *= Matrix4.CreateTranslation(_cubePositions[0]);
+        model *= Matrix4.CreateScale(0.00001f);
+        //        model *= Matrix4.CreateTranslation(_cubePositions[0]);
+        model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(270));
         _shader.SetMat4("model", model);
         _shader.SetFloat("material.shininess", 100.0f);
 
@@ -254,7 +265,7 @@ public class Game : GameWindow
         for (int i = 0; i < _pointLightPositions.Count; i++)
         {
 
-            _shader.SetVec3(String.Format("pointLights[{0}].ambient", i), new Vector3(0.1f, 0.1f, 0.1f));
+            _shader.SetVec3(String.Format("pointLights[{0}].ambient", i), new Vector3(0.6f, 0.6f, 0.6f));
             _shader.SetVec3(String.Format("pointLights[{0}].diffuse", i), new Vector3(0.9f, 1.0f, 1.0f));
             _shader.SetVec3(String.Format("pointLights[{0}].specular", i), new Vector3(0.9f, 1.0f, 1.0f));
             _shader.SetFloat(String.Format("pointLights[{0}].constant", i), 1.0f);
