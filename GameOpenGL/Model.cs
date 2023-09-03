@@ -25,11 +25,11 @@ namespace Model
             _model = importer.ImportFile(loadingPath + fileName, PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs);
             ProcessNode(_model.RootNode);
         }
-        public void Draw(Shader shader, int _EBO, int _VAO, int _VBO)
+        public void Draw(Shader shader)
         {
             foreach (var mesh in _meshes)
             {
-                mesh.Draw(shader, _EBO, _VAO, _VBO);
+                mesh.Draw(shader);
             }
         }
 
@@ -59,13 +59,13 @@ namespace Model
                 Vector3 vector3;
 
                 vector3.X = mesh.Vertices[i].X;
-                vector3.Y = mesh.Vertices[i].Y;
-                vector3.Z = mesh.Vertices[i].Z;
+                vector3.Z = mesh.Vertices[i].Y;
+                vector3.Y = mesh.Vertices[i].Z;
                 vertex.position = vector3;
 
                 vector3.X = mesh.Normals[i].X;
-                vector3.Y = mesh.Normals[i].Y;
-                vector3.Z = mesh.Normals[i].Z;
+                vector3.Z = mesh.Normals[i].Y;
+                vector3.Y = mesh.Normals[i].Z;
                 vertex.normal = vector3;
 
                 if (mesh.TextureCoordinateChannelCount != 0)    //if mesh has texture coordinates

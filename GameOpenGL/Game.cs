@@ -13,6 +13,9 @@ using Model;
 using System.Diagnostics;
 using ObjLoader.Loader.Loaders;
 using System.Reflection;
+using GameOpenGL.Physics;
+using GameOpenGL.Physics.GJK;
+using System.Collections.Generic;
 
 public class Game : GameWindow
 {
@@ -42,6 +45,10 @@ public class Game : GameWindow
 
     Camera _camera;
     Model.Model model1;
+    RigidBody _car;
+    RigidBody _cube;
+    RigidBody _cube2;
+    RigidBody _plane;
     Stopwatch _timer = new Stopwatch();
 
     List<Vector3> _cubePositions = new List<Vector3>{
@@ -100,92 +107,7 @@ public class Game : GameWindow
         GL.ClearColor(0.0f, 0.01f, 0.1f, 1.0f);
 
 
-        float[] vertices = {
-        // vertexes             // normals              //texture coords
-        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,     0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,     1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,     0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,     1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,     0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,     0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,     1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,     0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,     0.0f, 1.0f
-    };
-
-
-        //VBO1
-        _VBO = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, _VBO);
-        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-        //VAO1
-        _VAO = GL.GenVertexArray();
-        GL.BindVertexArray(_VAO);
-
-        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-        GL.EnableVertexAttribArray(0);
-
-        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-        GL.EnableVertexAttribArray(1);
-
-        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
-        GL.EnableVertexAttribArray(2);
-
-        GL.BindVertexArray(0);
-
-        // light VAO
-        _lightVAO = GL.GenVertexArray();
-        GL.BindVertexArray(_lightVAO);
-
-        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-        GL.EnableVertexAttribArray(0);
-
-        GL.BindVertexArray(0);
-
-
-
-        //EBO
-        _EBO = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-
-        GL.BindVertexArray(0);
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        
 
 
         _shader = new Shader("C:\\Users\\antuf\\source\\repos\\c#\\GameOpenGL\\shader.vert", "C:\\Users\\antuf\\source\\repos\\c#\\GameOpenGL\\shader.frag");
@@ -203,10 +125,28 @@ public class Game : GameWindow
 
         //model1 = new Model.Model("D:\\Models\\survival-guitar-backpack\\source\\", "Survival_BackPack_2.fbx");
         //model1 = new Model.Model("D:\\Models\\Nissan Skyline\\", "r32.obj");
-        //model1 = new Model.Model("D:\\Models\\Cube\\", "cube.fbx");
-        model1 = new Model.Model("D:\\Models\\BMW\\source\\", "E30_Final01.blend");
-        //model1 = new Model.Model("D:\\Models\\Viper - Copy\\source\\", "Super car Viper.fbx");
-    
+        model1 = new Model.Model("D:\\Models\\Viper\\source\\", "Super car Viper.fbx");
+        Model.Model model2 = new Model.Model("D:\\Models\\", "cube.fbx");
+        Model.Model model3 = new Model.Model("D:\\Models\\", "plane.fbx");
+
+        List<Vector3> collider_vertieces = new List<Vector3> { new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, -1.0f, 1.0f), new Vector3(-1.0f, 1.0f, 1.0f), new Vector3(-1.0f, -1.0f, 1.0f),
+            new Vector3(1.0f, 1.0f, -1.0f), new Vector3(1.0f, -1.0f, -1.0f), new Vector3(-1.0f, 1.0f, -1.0f), new Vector3(-1.0f, -1.0f, -1.0f)};
+
+
+        //List<Vector3>  collider_vertieces = new List<Vector3> { new Vector3(-0.5f, 0.5f, 0.0f), new Vector3(-0.5f, -0.5f, 0.0f), new Vector3(0.5f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.5f) };
+        //List<Vector3> collider_vertieces2 = new List<Vector3> { new Vector3(-1.3f, 0.2f, 0.0f), new Vector3(-0.4f, -0.7f, 0.0f), new Vector3(0.31f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.8f) };
+
+        _car = new RigidBody(model1, new GJKPolyhedron( collider_vertieces), _shader, Vector3.Zero, 0.00001f);
+        _cube = new RigidBody(model2, new GJKPolyhedron(collider_vertieces), _shader, new Vector3(0.0f, 10.0f, 0.0f));
+        _cube.Mass = 1.0f;
+        _cube2 = new RigidBody(model2, new GJKPolyhedron(collider_vertieces), _shader, new Vector3(0.0f, 0.0f, -10.0f));
+        _cube2.Mass = 1.0f;
+        //_plane = new RigidBody(model3, new PlaneCollider(new Vector3(1.0f, 1.0f, 1.0f), -2.0f), _shader, new Vector3(0.0f, -2.0f, 0.0f));
+        _cube.Direction = new Vector3(0.0f, -1.0f, 0.0f);
+        _cube.Speed = 1.0f;
+
+        _cube2.Direction = new Vector3(0.0f, 0.0f, 1.0f);
+        _cube2.Speed = 1.0f;
         GL.Enable(EnableCap.DepthTest);
     }
 
@@ -234,8 +174,13 @@ public class Game : GameWindow
         Matrix4 view = _camera.GetLookAt();
         Matrix4 projection = _camera.GetProjection();
 
-        Vector3 camera_pos = _camera.Pos;
+        _shader.Use();
+        _shader.SetMat4("projection", projection);
+        _shader.SetMat4("view", view);
 
+
+        Vector3 camera_pos = _camera.Pos;
+        _shader.SetVec3("viewPos", camera_pos);
         //cube
 
         //_textureDiffuse.Use(TextureUnit.Texture0);
@@ -245,17 +190,18 @@ public class Game : GameWindow
         //_textureEmission.Use(TextureUnit.Texture2);
         //_shader.SetInt("material.emission", 2);
 
-        _shader.Use();
-        _shader.SetMat4("projection", projection);
-        _shader.SetMat4("view", view);
+        //_shader.Use();
+        //_shader.SetMat4("projection", projection);
+        //_shader.SetMat4("view", view);
 
-        _shader.SetVec3("viewPos", camera_pos);
+        //_shader.SetVec3("viewPos", camera_pos);
 
-        Matrix4 model = Matrix4.Identity;
-        model *= Matrix4.CreateScale(0.00001f);
-        //        model *= Matrix4.CreateTranslation(_cubePositions[0]);
-        model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(270));
-        _shader.SetMat4("model", model);
+        //Matrix4 model = Matrix4.Identity;
+        //model *= Matrix4.CreateScale(0.00001f);
+        ////        model *= Matrix4.CreateTranslation(_cubePositions[0]);
+        //model *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(270));
+        //_shader.SetMat4("model", model);
+
         _shader.SetFloat("material.shininess", 100.0f);
 
         float x_pos = (float)Math.Sin(MathHelper.DegreesToRadians(15 * _timer.Elapsed.TotalSeconds));
@@ -265,7 +211,7 @@ public class Game : GameWindow
         for (int i = 0; i < _pointLightPositions.Count; i++)
         {
 
-            _shader.SetVec3(String.Format("pointLights[{0}].ambient", i), new Vector3(0.6f, 0.6f, 0.6f));
+            _shader.SetVec3(String.Format("pointLights[{0}].ambient", i), new Vector3(0.1f, 0.1f, 0.1f));
             _shader.SetVec3(String.Format("pointLights[{0}].diffuse", i), new Vector3(0.9f, 1.0f, 1.0f));
             _shader.SetVec3(String.Format("pointLights[{0}].specular", i), new Vector3(0.9f, 1.0f, 1.0f));
             _shader.SetFloat(String.Format("pointLights[{0}].constant", i), 1.0f);
@@ -287,7 +233,17 @@ public class Game : GameWindow
         GL.BindVertexArray(_VAO);
 
 
-        model1.Draw(_shader, _EBO, _VAO, _VBO);
+        //model1.Draw(_shader);
+        _car.Draw();
+        _cube2.UpdatePos(_deltaTime);
+        _cube.UpdatePos(_deltaTime);
+
+        _cube2.CollisionResponse(_cube);
+
+        _cube2.Draw();
+        _cube.Draw();
+
+        Matrix4 model = Matrix4.Zero;
         for (int i = 0; i < _cubePositions.Count; i++)
         {
 //            Matrix4 model = Matrix4.Identity;
@@ -323,6 +279,7 @@ public class Game : GameWindow
             GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
         }
 
+        Console.WriteLine(_cube.CheckCollision(_cube2));
 
         Context.SwapBuffers();
 

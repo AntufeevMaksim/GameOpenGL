@@ -45,21 +45,16 @@ namespace Model
             setupMesh();
         }
 
-        public void Draw(Shader shader, int _EBO, int _VAO, int _VBO)
+        public void Draw(Shader shader)
         {
             uint diffuse_texture_nr = 0;
             uint specular_texture_nr = 0;
 
-            shader.SetInt("has_textures", /*_textures.Count*/0);
+            shader.SetInt("has_textures", _textures.Count);
 
-            if (_textures.Any(t => t.Path.Contains("_3.jpg")))
-            {
-                shader.SetVec4("material.color", new Vector4(0.5f));
-            }
-            else
-            {
-                shader.SetVec4("material.color", /*_color*/ new Vector4(1.0f));
-            }
+
+            shader.SetVec4("material.color", _color);
+
             for (int i = 0; i < _textures.Count; i++)
             {
                 _textures[i].Use(TextureUnit.Texture0 + i);
