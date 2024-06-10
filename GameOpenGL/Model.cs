@@ -12,24 +12,32 @@ using ObjLoader.Loader.Data;
 
 namespace Model
 {
+    /// <summary>
+    /// set of meshes with textures which constitute a complete graphical representation of object 
+    /// </summary>
     public class Model
     {
+        private Shader _shader;
         private List<Mesh> _meshes = new List<Mesh>();
         private Scene _model;
         private List<Texture> _textures_loaded = new List<Texture>();
         private string _loadingPath;
-        public Model(string loadingPath, string fileName)
+        public Model(string loadingPath, string fileName, Shader shader)
         {
+            _shader = shader;
             _loadingPath = loadingPath;
             AssimpContext importer = new AssimpContext();
             _model = importer.ImportFile(loadingPath + fileName, PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs);
             ProcessNode(_model.RootNode);
+            _shader = shader;
         }
-        public void Draw(Shader shader)
+        public void Draw(Matrix4 transformations)
         {
+            _shader.Use();
+            _shader.SetMat4("model", transformations);
             foreach (var mesh in _meshes)
             {
-                mesh.Draw(shader);
+                mesh.Draw(_shader);
             }
         }
 

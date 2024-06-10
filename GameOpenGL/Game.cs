@@ -125,9 +125,9 @@ public class Game : GameWindow
 
         //model1 = new Model.Model("D:\\Models\\survival-guitar-backpack\\source\\", "Survival_BackPack_2.fbx");
         //model1 = new Model.Model("D:\\Models\\Nissan Skyline\\", "r32.obj");
-        model1 = new Model.Model("D:\\Models\\Viper\\source\\", "Super car Viper.fbx");
-        Model.Model model2 = new Model.Model("D:\\Models\\", "cube.fbx");
-        Model.Model model3 = new Model.Model("D:\\Models\\", "plane.fbx");
+        model1 = new Model.Model("D:\\Models\\Viper\\source\\", "Super car Viper.fbx", _shader);
+        Model.Model model2 = new Model.Model("D:\\Models\\", "cube.fbx", _shader);
+        Model.Model model3 = new Model.Model("D:\\Models\\", "plane.fbx", _shader);
 
         List<Vector3> collider_vertieces = new List<Vector3> { new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, -1.0f, 1.0f), new Vector3(-1.0f, 1.0f, 1.0f), new Vector3(-1.0f, -1.0f, 1.0f),
             new Vector3(1.0f, 1.0f, -1.0f), new Vector3(1.0f, -1.0f, -1.0f), new Vector3(-1.0f, 1.0f, -1.0f), new Vector3(-1.0f, -1.0f, -1.0f)};
@@ -136,15 +136,16 @@ public class Game : GameWindow
         //List<Vector3>  collider_vertieces = new List<Vector3> { new Vector3(-0.5f, 0.5f, 0.0f), new Vector3(-0.5f, -0.5f, 0.0f), new Vector3(0.5f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.5f) };
         //List<Vector3> collider_vertieces2 = new List<Vector3> { new Vector3(-1.3f, 0.2f, 0.0f), new Vector3(-0.4f, -0.7f, 0.0f), new Vector3(0.31f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.8f) };
 
-        _car = new RigidBody(model1, new GJKPolyhedron( collider_vertieces), _shader, Vector3.Zero, 0.00001f);
-        _cube = new RigidBody(model2, new GJKPolyhedron(collider_vertieces), _shader, new Vector3(0.0f, 10.0f, 0.0f));
+        _car = new RigidBody(model1, new GJKPolyhedron( collider_vertieces), Vector3.Zero, 0.00001f);
+        _cube = new RigidBody(model2, new GJKPolyhedron(collider_vertieces), new Vector3(0.0f, 10.0f, 0.0f));
         _cube.Mass = 1.0f;
-        _cube2 = new RigidBody(model2, new GJKPolyhedron(collider_vertieces), _shader, new Vector3(0.0f, 0.0f, -10.0f));
+        _cube2 = new RigidBody(model2, new GJKPolyhedron(collider_vertieces), new Vector3(0.0f, 0.0f, -10.0f));
         _cube2.Mass = 1.0f;
-        //_plane = new RigidBody(model3, new PlaneCollider(new Vector3(1.0f, 1.0f, 1.0f), -2.0f), _shader, new Vector3(0.0f, -2.0f, 0.0f));
+
         _cube.Direction = new Vector3(0.0f, -1.0f, 0.0f);
         _cube.Speed = 1.0f;
-
+        _cube.Elasticity = 0.5f;
+        _cube2.Elasticity = 0.5f;
         _cube2.Direction = new Vector3(0.0f, 0.0f, 1.0f);
         _cube2.Speed = 1.0f;
         GL.Enable(EnableCap.DepthTest);
@@ -161,7 +162,7 @@ public class Game : GameWindow
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         GL.Enable(EnableCap.Blend);
-        GL.ClearColor(new Color4(0.0f, 0.0f, 0.0f, 0.0f));
+        GL.ClearColor(new Color4(0.17f, 0.34f, 0.49f, 0.0f));
 
 
         float current_frame = _timer.ElapsedMilliseconds;

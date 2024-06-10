@@ -5,6 +5,9 @@ using GameOpenGL.Physics.GJK;
 
 namespace GameOpenGL.Physics
 {
+    /// <summary>
+    /// physical and graphical representation of object
+    /// </summary>
     public class RigidBody
     {
         Model.Model _model;
@@ -16,7 +19,7 @@ namespace GameOpenGL.Physics
         Vector3 _rotationAxis = Vector3.One;
         float _rotationAngle = 0.0f;
         float _scale;
-        Shader _shader;
+        float _elasticity;
 
         public GJKCollider Collider { get ; private set ; }
         public Vector3 Direction { get { return _direction; } set { _direction = value.Normalized(); }  }
@@ -25,9 +28,12 @@ namespace GameOpenGL.Physics
 
         public float Mass { get; set; }
 
-        public RigidBody(Model.Model model, GJKCollider collider, Shader shader, Vector3 position, float scale = 1.0f)
+        /// <summary>
+        /// valid values ​​are from 0 to 1
+        /// </summary>
+        public float Elasticity { get => _elasticity; set { _elasticity = Math.Abs(value) > 1.0f ?  1.0f : Math.Abs(value); } }
+        public RigidBody(Model.Model model, GJKCollider collider, Vector3 position, float scale = 1.0f)
         {
-            _shader = shader;
             _scale = scale;
             _model = model;
             Collider = collider;
@@ -38,15 +44,13 @@ namespace GameOpenGL.Physics
 
         public void Draw()
         {
-            _shader.Use();
 
             Matrix4 model = Matrix4.CreateScale(_scale);
             model *= Matrix4.CreateTranslation(_position);
             model *= Matrix4.CreateFromAxisAngle(_rotationAxis, _rotationAngle);
 
-            _shader.SetMat4("model", model);
 
-            _model.Draw(_shader);
+            _model.Draw(model);
 
         }
 
@@ -70,21 +74,20 @@ namespace GameOpenGL.Physics
                 float old_speed = Speed;
                 Vector3 old_direction = Direction;
 
-                UpdateDirAndSpeedAfterCollision(other.Mass, other.Speed, other.Direction);
-                other.UpdateDirAndSpeedAfterCollision(Mass, old_speed, old_direction);
+                UpdateDirAndSpeedAfterCollision(other.Mass, other.Speed, other.Direction, other.Elasticity);
+                other.UpdateDirAndSpeedAfterCollision(Mass, old_speed, old_direction, other.Elasticity);
             }
         }
 
-        public void UpdateDirAndSpeedAfterCollision(float otherMass, float otherSpeed, Vector3 otherDirection)
+        public void UpdateDirAndSpeedAfterCollision(float otherMass, float otherSpeed, Vector3 otherDirection, float otherElasticity)
         {
-            Vector3 pulse;
+            Vector3 directed_speed;
+            float collision_elasticity = otherElasticity * Elasticity;
 
-            pulse.X = ((2 * otherMass) / (Mass + otherMass)) * otherSpeed * otherDirection.X + ((Mass - otherMass) / (Mass + otherMass)) * Speed * Direction.X;
-            pulse.Y = ((2 * otherMass) / (Mass + otherMass)) * otherSpeed * otherDirection.Y + ((Mass - otherMass) / (Mass + otherMass)) * Speed * Direction.Y;
-            pulse.Z = ((2 * otherMass) / (Mass + otherMass)) * otherSpeed * otherDirection.Z + ((Mass - otherMass) / (Mass + otherMass)) * Speed * Direction.Z;
+            directed_speed = (_speed * Direction) - (1 + collision_elasticity) * (otherMass / (Mass + otherMass)) * ((_speed * Direction) - (otherSpeed * otherDirection));
 
-            _speed = pulse.Length;
-            Direction = Vector3.Normalize(pulse);
+            _speed = directed_speed.Length;
+            Direction = Vector3.Normalize(directed_speed);
         }
     }
 }
